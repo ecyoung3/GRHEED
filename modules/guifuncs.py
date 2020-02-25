@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""FRHEED
+'''
+FRHEED
 
 This is a real-time RHEED (Reflection High Energy Electron Diffraction)
 analysis program designed for use with USB or FLIR GigE cameras.
@@ -17,7 +18,7 @@ Originally created October 2018.
 
 Github: https://github.com/ecyoung3/FRHEED
 
-"""
+'''
 
 import sys
 import os
@@ -587,7 +588,7 @@ def calculateIntensities(
             # Increment plot number for vertical shifting
             plotnum += 1
 
-    # Emit the finished signal (probably not essential)
+    # Emit the finished signal to keep thread happy
     finished.emit()
 
 def updatePlots(
@@ -608,6 +609,8 @@ def updatePlots(
         # Enable manual FFT button if there is data
         if numplots > 0:
             self.fftButton.setEnabled(True)
+        else:
+            self.fftButton.setEnabled(False)
             
         for col in self.shapes.keys():
             tl = self.shapes[col]['top left']
@@ -647,6 +650,7 @@ def updatePlots(
                                             t[pos:], 
                                             data[pos:]
                                             )
+                
         time.sleep(0.04) # give time for the GUI to update
         finished.emit() # emit signal because otherwise the thread crashes
         
@@ -697,7 +701,7 @@ def plotStoredData(self):
     axes.enableAutoRange()
      
 def liveFFT(self, finished, rate: float = 0.5, **kwargs):
-    # Limit the rate
+    # Limit the rate (run maximum 6 times per second)
     wait = utils.rateLimiter(6)
     if not wait:
         return
@@ -708,6 +712,8 @@ def liveFFT(self, finished, rate: float = 0.5, **kwargs):
             # Load the data to plot FFT of
             t = self.shapes[col]['time']
             data = self.shapes[col]['data']
+            
+            # The plot line object where the data wil be displayed
             line = self.shapes[col]['fftline']
             
             # Calculate FFT from data
@@ -716,15 +722,14 @@ def liveFFT(self, finished, rate: float = 0.5, **kwargs):
             # Skip this data if calculation fails
             if freq is None or psd is None:
                 continue
-            
+        
         finished.emit()
                 
-    # self.fftPlotAxes.enableAutoRange()
-    
 def calculateFFT(self, x, y, line):
     # Make sure data exists in the dictionary
     if not x or not y or line is None:
         return None, None
+    
     # Equalize data lengths
     x, y = utils.equalizeDataLengths(x, y)
     
@@ -767,9 +772,6 @@ def calculateFFT(self, x, y, line):
         self.fftPlotAxes.addItem(line)
     
     return freq, psd
-
-def plotFFT(self):
-    pass
 
 def findPeaks(
     self, 
@@ -918,6 +920,7 @@ def manualFreqCalc(self, plot):
     # Get the number of peaks between points
     peaks = numpeaks.value()
     
+    # Exit if there are no vertical lines on the current plot
     if plotname not in self.vlines:
         return
     
@@ -1012,10 +1015,6 @@ def drawShapes(self, deleteshape: bool = False):
         rect = self.shapes[self.activecolor]['rect']
         qp.drawRect(rect)
         
-    # x, y = self.beginpos.x(), self.beginpos.y()
-    # w, h = self.currpos.x() - x, self.currpos.y() - y
-    # qp.drawEllipse(x, y, w, h)
-    
     # Paint existing shapes other than the active color
     for col in self.shapes.keys():
         rect = self.shapes[col]['rect']
@@ -1386,6 +1385,4 @@ def simulateRHEED(self):
     
     img = changeBrightness(img, 10*amplitude)
 
-    self.frameindex += 1
-    
     return img

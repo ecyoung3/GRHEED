@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # -*- coding: utf-8 -*-
-"""FRHEED
+'''
+FRHEED
 
 This is a real-time RHEED (Reflection High Energy Electron Diffraction)
 analysis program designed for use with USB or FLIR GigE cameras.
@@ -18,17 +19,15 @@ Originally created October 2018.
 
 Github: https://github.com/ecyoung3/FRHEED
 
-"""
-from PyQt5.QtWidgets import QPushButton, QLabel, QSizePolicy, QShortcut
-from PyQt5.QtGui import QPixmap, QTabWidget, QTabBar, QFont
+'''
+from PyQt5.QtWidgets import QPushButton, QLabel, QSizePolicy
+from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import Qt, QTimer
-import configparser
 from matplotlib import cm
 import pyqtgraph as pg
 import numpy as np
 from PIL import Image, ImageQt
 from colormap import Colormap
-import pyqtgraph.opengl as gl
 
 # =============================================================================
 # 
@@ -98,6 +97,7 @@ def statusbar(self):
     self.droppedframestatus.setText('Total dropped frames: 0 ')
     self.droppedframestatus.setFixedWidth(176)
     self.droppedframestatus.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
+    
     # Add the statusbar widgets
     s = self.statusBar()
     s.addWidget(self.mainstatus)
@@ -129,7 +129,7 @@ def annotation(self):
     self.setGrowthLayer.textChanged.connect(lambda: guifuncs.annotationLayerText(self))
     self.setMisc.textChanged.connect(lambda: guifuncs.annotationMiscText(self))
     
-    # Set annotation height
+    # Set annotation frame height
     self.anno_height = 70
         
 def colormaps(self):
@@ -194,6 +194,10 @@ def notebook(self):
     self.clearnotesButton.clicked.connect(lambda: guifuncs.clearNotes(self))
 
 def plots(self):
+    # Set default appearance of pyqtgraph plots
+    pg.setConfigOption('background', (25, 35, 45))
+    pg.setConfigOption('foreground', (255, 255, 255))
+    
     # The line below can be used to disable the Close button on specific tabs
     # QTabWidget.tabBar(self.oldDataTabs).setTabButton(0, QTabBar.RightSide, None)
     
@@ -214,7 +218,6 @@ def plots(self):
     for p in allplots:
         p.setXRange(0, 1, padding=0)
         p.plotItem.showGrid(True, False, 0.05)
-        # p.plotItem.setLogMode(False, True)
         p.plotItem.getAxis('bottom').tickFont = plotfont
         p.plotItem.getAxis('bottom').setStyle(**tickstyle)
         for axis in ['right', 'top', 'left']:
@@ -314,6 +317,10 @@ def cambuttons(self):
         b.clicked.connect(lambda: guifuncs.setImageProfile(self))
 
 def simulation(self):
+    # Load sample image for RHEED simulation
+    self.rheed_sample_img = np.array(Image.open('rheed_spots.png'))
+    
+    # Define widget functionality
     self.enableSimulationButton.clicked.connect(lambda: guifuncs.enableSimulation(self))
 
 def variables(self):
@@ -447,9 +454,6 @@ def variables(self):
         'runtime': 0,
         'remaining': 0,
         }
-
-def shortcuts(self):
-    pass
 
 def core_ui(self):
     variables(self)
