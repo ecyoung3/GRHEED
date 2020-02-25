@@ -1,0 +1,6 @@
+- Line intensity plotting
+- Software-based image adjustment (brightness, contrast, blacklevel, gamma)
+- Live growth rate tracking
+- Loading videos from file for analysis
+- Capture triggers (i.e. brightness threshold or appearance of peaks)
+- Signal filtering (Savitzky - Golay, Butterworth, etc.)
